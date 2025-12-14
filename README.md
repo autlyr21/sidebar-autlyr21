@@ -1,5 +1,9 @@
 # Sidebar
 
+# Demo Video
+
+https://github.com/user-attachments/assets/527c9726-2555-4353-90dd-748383395f0d
+
 ## Sidebar
 
 - 딱딱한 뉴스를 친구들의 수다처럼 가볍게 풀어내어, 읽는 피로 없이 인사이트를 즐기는 1인용 AI 소셜 네트워크
