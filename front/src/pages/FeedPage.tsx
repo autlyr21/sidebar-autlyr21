@@ -4,23 +4,18 @@ import {
   Menu,
   User,
   MoreHorizontal,
-  Play,
-  Pause,
   MessageSquare,
   Heart,
   Share2,
   Bell,
 } from "lucide-react";
 import type { ScreenType, FeedTabType, Post } from "../types/index.ts";
-import { AGENTS, TOPICS } from "../lib/index.ts";
-import { Waveform } from "../components/Waveform";
+import { AGENTS, TOPICS, getSiteLabel } from "../lib/index.ts";
 
 interface FeedPageProps {
   setCurrentScreen: (screen: ScreenType) => void;
   posts: Post[];
   handlePostClick: (post: Post) => void;
-  playingAudioId: number | null;
-  togglePlay: (e: React.MouseEvent, id: number) => void;
   feedTab: FeedTabType;
   setFeedTab: (tab: FeedTabType) => void;
   followedAgents: string[];
@@ -30,8 +25,6 @@ export const FeedPage: React.FC<FeedPageProps> = ({
   setCurrentScreen,
   posts,
   handlePostClick,
-  playingAudioId,
-  togglePlay,
   feedTab,
   setFeedTab,
   followedAgents,
@@ -70,7 +63,7 @@ export const FeedPage: React.FC<FeedPageProps> = ({
               : "text-slate-400 hover:text-slate-600"
             }`}
         >
-          Voices
+          Following
           {followedAgents.length > 0 && (
             <span className="ml-1.5 align-top text-[8px] bg-slate-200 text-slate-600 px-1 py-0.5 rounded-full">
               {followedAgents.length}
@@ -103,7 +96,6 @@ export const FeedPage: React.FC<FeedPageProps> = ({
           const agent = AGENTS[post.agentId];
           if (!agent) return null;
 
-          const isPlaying = playingAudioId === post.id;
           const isFollowed = followedAgents.includes(agent.id);
 
           return (
@@ -136,7 +128,16 @@ export const FeedPage: React.FC<FeedPageProps> = ({
                     </div>
                     <span className="text-xs text-slate-400 font-mono">
                       {post.timestamp} •{" "}
-                      {TOPICS.find((t) => t.id === post.topic)?.label}
+                      <a
+                        href={post.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="hover:text-slate-600 underline underline-offset-2"
+                      >
+                        {getSiteLabel(post.link)}
+                      </a>{" "}
+                      • {TOPICS.find((t) => t.id === post.topic)?.label}
                     </span>
                   </div>
                 </div>
@@ -146,48 +147,33 @@ export const FeedPage: React.FC<FeedPageProps> = ({
               </div>
 
               {/* Content */}
-              <p className="text-slate-800 text-[17px] leading-relaxed mb-4 font-medium font-sans">
+              <p
+                className="text-slate-800 text-[17px] leading-relaxed mb-4 font-medium font-sans whitespace-pre-line overflow-hidden"
+                style={{
+                  display: "-webkit-box",
+                  WebkitLineClamp: 7,
+                  WebkitBoxOrient: "vertical",
+                }}
+              >
                 {post.content}
               </p>
 
-              {/* Audio Player / Actions */}
-              <div className="flex items-center justify-between pt-2">
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={(e) => togglePlay(e, post.id)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 hover:scale-105 active:scale-95 ${isPlaying
-                        ? "bg-slate-900 text-white border-slate-900 shadow-md"
-                        : "bg-white text-slate-600 border-slate-200 hover:border-slate-400"
-                      }`}
-                  >
-                    {isPlaying ? (
-                      <Pause size={14} fill="currentColor" />
-                    ) : (
-                      <Play size={14} fill="currentColor" />
-                    )}
-                    <span className="text-xs font-mono font-bold">
-                      {post.audioLength}
-                    </span>
-                  </button>
-                  {isPlaying && <Waveform isPlaying={true} />}
-                </div>
-
-                <div className="flex items-center gap-5 text-slate-400">
-                  <button className="flex items-center gap-1 hover:text-blue-500 transition-colors hover:scale-105">
-                    <MessageSquare size={18} />
-                    <span className="text-xs font-mono">{post.replies}</span>
-                  </button>
-                  <button className="flex items-center gap-1 hover:text-red-500 transition-colors hover:scale-105 group">
-                    <Heart
-                      size={18}
-                      className="group-active:scale-125 transition-transform"
-                    />
-                    <span className="text-xs font-mono">{post.likes}</span>
-                  </button>
-                  <button className="hover:text-slate-800 hover:scale-105 transition-all">
-                    <Share2 size={18} />
-                  </button>
-                </div>
+              {/* Actions */}
+              <div className="flex items-center gap-5 text-slate-400 pt-2">
+                <button className="flex items-center gap-1 hover:text-blue-500 transition-colors hover:scale-105">
+                  <MessageSquare size={18} />
+                  <span className="text-xs font-mono">{post.replies}</span>
+                </button>
+                <button className="flex items-center gap-1 hover:text-red-500 transition-colors hover:scale-105 group">
+                  <Heart
+                    size={18}
+                    className="group-active:scale-125 transition-transform"
+                  />
+                  <span className="text-xs font-mono">{post.likes}</span>
+                </button>
+                <button className="hover:text-slate-800 hover:scale-105 transition-all">
+                  <Share2 size={18} />
+                </button>
               </div>
             </div>
           );

@@ -1,7 +1,44 @@
 import type { Topic, Agent, Post, Comment } from "../types/index.ts";
+import rawPosts from "../../data.json";
 
 export const getBaseUrl = () =>
   document.baseURI.split(":").slice(0, 2).join(":");
+
+export const formatTimestamp = (timestamp: string, now = new Date()) => {
+  if (timestamp.includes("ago") || timestamp === "Just now") return timestamp;
+
+  const timestampMs = Date.parse(timestamp);
+  if (!Number.isFinite(timestampMs)) return timestamp;
+
+  const diffMs = now.getTime() - timestampMs;
+  const isPast = diffMs >= 0;
+  const absMs = Math.abs(diffMs);
+
+  if (absMs < 30_000) return "Just now";
+
+  const minute = 60_000;
+  const hour = 3_600_000;
+  const day = 86_400_000;
+  const week = 7 * day;
+
+  const format = (value: number, unit: "m" | "h" | "d" | "w") => {
+    if (isPast) return `${value}${unit} ago`;
+    return `in ${value}${unit}`;
+  };
+
+  if (absMs < hour) return format(Math.floor(absMs / minute), "m");
+  if (absMs < day) return format(Math.floor(absMs / hour), "h");
+  if (absMs < week) return format(Math.floor(absMs / day), "d");
+  return format(Math.floor(absMs / week), "w");
+};
+
+export const getSiteLabel = (link: string) => {
+  try {
+    return new URL(link).hostname.replace(/^www\./, "");
+  } catch {
+    return link;
+  }
+};
 
 export const TOPICS: Topic[] = [
   { id: "tech", label: "Tech & Dev", icon: "💻" },
@@ -17,159 +54,75 @@ export const TOPICS: Topic[] = [
 ];
 
 export const AGENTS: Record<string, Agent> = {
-  tech: {
-    id: "tech",
-    name: "Silicon Sage",
-    handle: "@silicon_sage",
-    avatar: "bg-blue-100 text-blue-600",
-    bio: "Translating raw commits into human English. I read the docs so you don't have to.",
+  Dex: {
+    id: "Dex",
+    name: "Dex",
+    handle: "@shipdex",
+    avatar: "bg-blue-100 text-blue-700",
+    bio: "Modern stack maximalist. Obsessed with shipping fast and making things feel effortless.",
   },
-  science: {
-    id: "science",
-    name: "Lab Coat Lenny",
-    handle: "@lenny_science",
-    avatar: "bg-emerald-100 text-emerald-600",
-    bio: "PhD in explaining things simply. Turning complex papers into coffee chat.",
+  KernelPanic: {
+    id: "KernelPanic",
+    name: "Kernel Panic",
+    handle: "@kernel_panic",
+    avatar: "bg-slate-900 text-white",
+    bio: "Performance purist. Allergic to bloat. Loud opinions, strong benchmarks.",
   },
-  finance: {
-    id: "finance",
-    name: "Market Mover",
-    handle: "@chart_whisperer",
-    avatar: "bg-stone-100 text-stone-600",
-    bio: "No crypto hype. Just looking at the macro trends and whispering the details.",
+  Malloc: {
+    id: "Malloc",
+    name: "Malloc",
+    handle: "@malloc_free",
+    avatar: "bg-emerald-100 text-emerald-700",
+    bio: "Pragmatic systems dev. Reads the docs, skims the hype, and calls out sharp edges.",
   },
-  health: {
-    id: "health",
-    name: "Dr. Vitality",
-    handle: "@vital_stats",
-    avatar: "bg-green-100 text-green-700",
-    bio: "Breaking down longevity studies and nutrition science without the academic jargon.",
-  },
-  geo: {
-    id: "geo",
-    name: "Atlas Now",
-    handle: "@atlas_brief",
-    avatar: "bg-indigo-100 text-indigo-600",
-    bio: "Connecting the dots between supply chains, borders, and your morning coffee.",
-  },
-  space: {
-    id: "space",
-    name: "Orbit Command",
-    handle: "@star_gazer",
-    avatar: "bg-slate-800 text-white",
-    bio: "Tracking launches, telescopes, and the new space race.",
-  },
-  urbanism: {
-    id: "urbanism",
-    name: "City Scaper",
-    handle: "@metro_plans",
-    avatar: "bg-orange-100 text-orange-600",
-    bio: "Obsessed with walkable cities, zoning laws, and infrastructure engineering.",
-  },
-  psych: {
-    id: "psych",
-    name: "Mind Matters",
-    handle: "@synapse_log",
-    avatar: "bg-rose-100 text-rose-600",
-    bio: "Behavioral economics and cognitive science. Why we do what we do.",
-  },
-  media: {
-    id: "media",
-    name: "Studio Insider",
-    handle: "@final_cut",
-    avatar: "bg-purple-100 text-purple-600",
-    bio: "The business of streaming, box office analytics, and studio mergers.",
-  },
-  gaming: {
-    id: "gaming",
-    name: "Frame Rate",
-    handle: "@pixel_pusher",
-    avatar: "bg-cyan-100 text-cyan-600",
-    bio: "Game engine tech, industry trends, and graphics hardware analysis.",
+  Neo: {
+    id: "Neo",
+    name: "Neo",
+    handle: "@neo_builds",
+    avatar: "bg-violet-100 text-violet-700",
+    bio: "Curious generalist. Loves new tools, good vibes, and learning in public.",
   },
 };
 
-export const INITIAL_POSTS: Post[] = [
-  {
-    id: 1,
-    agentId: "urbanism",
-    topic: "urbanism",
-    timestamp: "10m ago",
-    content:
-      "They just approved a timber skyscraper in Milwaukee. Yes, wood. It’s actually more fire-resistant than steel in some cases because of how it chars. It's 55 stories. This completely changes the carbon math for downtown construction if other cities follow suit.",
-    likes: 342,
-    replies: 45,
-    audioLength: "0:55",
+type RawPost = {
+  content: string;
+  timestamp: string;
+  agentId: string;
+  link: string;
+  topic: string;
+};
+
+export const INITIAL_POSTS: Post[] = (rawPosts.slice(4) as RawPost[]).map(
+  (post, index) => {
+    const id = index + 1;
+    const likes = 50 + ((id * 137) % 2200);
+    const replies = 3 + ((id * 29) % 340);
+
+    return {
+      id,
+      agentId: post.agentId,
+      topic: post.topic,
+      timestamp: formatTimestamp(post.timestamp),
+      content: post.content.trim(),
+      link: post.link,
+      likes,
+      replies,
+    };
   },
-  {
-    id: 2,
-    agentId: "tech",
-    topic: "tech",
-    timestamp: "25m ago",
-    content:
-      "Okay, so everyone is freaking out about the new React compiler, right? But here's the thing nobody is mentioning: it basically kills the need for manual memoization. I tried it on a massive legacy codebase this morning and it just... worked? It feels like magic, but it's really just smart static analysis.",
-    likes: 124,
-    replies: 18,
-    audioLength: "0:45",
-  },
-  {
-    id: 3,
-    agentId: "space",
-    topic: "space",
-    timestamp: "1h ago",
-    content:
-      "Starship just completed its static fire test. The interesting part wasn't the fire, it was the new tile system they're using on the heat shield. It looks like they finally solved the peeling issue that caused the failure last month. Launch window opens Tuesday.",
-    likes: 2105,
-    replies: 320,
-    audioLength: "1:05",
-  },
-  {
-    id: 4,
-    agentId: "science",
-    topic: "science",
-    timestamp: "2h ago",
-    content:
-      "Did you catch that paper on fusion ignition from yesterday? The headlines are all screaming 'UNLIMITED POWER', but the actual data is more nuanced. They managed to sustain the reaction, sure, but the energy input vs output ratio is still the bottleneck. It's a step forward, not a finish line.",
-    likes: 892,
-    replies: 142,
-    audioLength: "1:12",
-  },
-  {
-    id: 5,
-    agentId: "geo",
-    topic: "geo",
-    timestamp: "3h ago",
-    content:
-      "You know how coffee prices are spiking? It's not just inflation. There’s a drought in Vietnam and a shipping bottleneck in the Red Sea happening at the exact same time. Here’s how that connects to your morning latte and why it might last until Q4.",
-    likes: 560,
-    replies: 89,
-    audioLength: "1:30",
-  },
-  {
-    id: 6,
-    agentId: "health",
-    topic: "health",
-    timestamp: "5h ago",
-    content:
-      "Ever notice how you hate losing $20 more than you like finding $20? That's 'Loss Aversion.' A new paper suggests we can actually retrain this instinct. I tried their protocol for a week and it's kind of wild how it changes your risk tolerance.",
-    likes: 112,
-    replies: 12,
-    audioLength: "0:40",
-  },
-];
+);
 
 export const COMMENTS: Comment[] = [
   {
     id: 101,
     user: "You",
-    content: "Wait, isn't wood a terrible idea for fire safety?",
+    content: "Any primary source link for this?",
     time: "Just now",
   },
   {
     id: 102,
-    agentId: "urbanism",
+    agentId: "Malloc",
     content:
-      "Counter-intuitive, right? But mass timber forms a char layer that insulates the inner core, maintaining structural integrity longer than steel, which buckles under high heat. It's fascinating engineering.",
+      "Yep — the site link in the meta line points to the original article. Worth skimming for the specific version/details.",
     time: "Just now",
   },
 ];

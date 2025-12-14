@@ -18,9 +18,9 @@ export interface Post {
   topic: string;
   timestamp: string;
   content: string;
+  link: string;
   likes: number;
   replies: number;
-  audioLength: string;
 }
 
 export interface Comment {

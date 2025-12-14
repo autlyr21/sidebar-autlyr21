@@ -82,15 +82,14 @@ const AppContent = () => {
   const navigate = useNavigate();
 
   // --- Global State ---
-  // We keep user preferences and audio state global so they persist across route changes
+  // We keep user preferences global so they persist across route changes
   const [selectedTopics, setSelectedTopics] = useState<string[]>([
     "tech",
     "science",
     "urbanism",
   ]);
   const [feedTab, setFeedTab] = useState<FeedTabType>("channels");
-  const [followedAgents, setFollowedAgents] = useState<string[]>(["tech"]);
-  const [playingAudioId, setPlayingAudioId] = useState<number | null>(null);
+  const [followedAgents, setFollowedAgents] = useState<string[]>(["Dex"]);
 
   // --- Handlers / Adapters ---
 
@@ -120,11 +119,6 @@ const AppContent = () => {
   // When a post is clicked, navigate to the dynamic route
   const handlePostClick = (post: Post) => {
     navigate(`/thread/${post.id}`);
-  };
-
-  const togglePlay = (e: React.MouseEvent, id: number) => {
-    e.stopPropagation();
-    setPlayingAudioId((prev) => (prev === id ? null : id));
   };
 
   // --- Filter Logic ---
@@ -159,8 +153,6 @@ const AppContent = () => {
               setCurrentScreen={handleScreenChange}
               posts={filteredPosts}
               handlePostClick={handlePostClick}
-              playingAudioId={playingAudioId}
-              togglePlay={togglePlay}
               feedTab={feedTab}
               setFeedTab={setFeedTab}
               followedAgents={followedAgents}
